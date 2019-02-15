@@ -23,6 +23,13 @@ class DataLoader():
         self.size_A = len(self.images_paths_A)
         self.size_B = len(self.images_paths_B)
 
+        # set input and output channels properly based on direction of mapping
+        AtoB = self.opt.direction == 'AtoB'
+        self.in_channels = self.opt.in_channels if AtoB else self.opt.out_channels
+        self.out_channels = self.opt.out_channels if AtoB else self.opt.in_channels
+
+        self.step = 0
+
     def __getitem__(self, index):
         """
             Get image at index from image set A and image set B.
@@ -38,16 +45,33 @@ class DataLoader():
         image_A = Image.open(image_path_A).convert('RGB')
         image_B = Image.open(image_path_B).convert('RGB')
 
-        # set input and output channels properly based on direction of mapping
-        AtoB = self.opt.direction == 'AtoB'
-        self.in_channels = self.opt.in_channels if AtoB else self.opt.out_channels
-        self.out_channels = self.opt.out_channels if AtoB else self.opt.in_channels
-
         # perform data augmentation on images
         A = utils.augment(self.opt, image_A, grayscale=(self.in_channels == 1))
         B = utils.augment(self.opt, image_B, grayscale=(self.out_channels == 1))
 
         return {'A': A, 'A_path': image_path_A, 'B': B, 'B_path': image_path_B}
+
+    def __iter__(self):
+        """
+            Iterator that will get a set batch size of images.
+        """
+        A = []
+        B = []
+
+        if self.step % 1000 == 0: # shuffle the datasets every 1000 steps
+            self.shuffle()
+
+        for idx in (self.opt.batch_size): # grab a batch of real data
+            data = self.__getitem__(idx + (self.step * batch_size))
+            A.append(data['A'])
+            B.append(data['B'])
+
+        self.step += 1
+
+        A = np.stack(A)
+        B = np.stack(B)
+
+        return A, B
 
     def __len__(self):
         """

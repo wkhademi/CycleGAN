@@ -52,14 +52,16 @@ parser.add_argument('--ngf', type=int, default=64,
                     help='# of gen filters in first conv layer. Default is 64.')
 parser.add_argument('--ndf', type=int, default=64,
                     help='# of discrim filters in first conv layer. Default is 64.')
+parser.add_argument('--netG', type=str, default='resnet_9blocks',
+                    help='Specify generator architecture. [resnet_9blocks | resnet_6blocks | unet_256 | unet_128]')
 parser.add_argument('--pool_size', type=int, default=50,
                     help='the size of image buffer that stores previously generated images')
-parser.add_argument('--use_lsgan', type=bool, default=True,
+parser.add_argument('--gan_mode', type=str, default='lsgan',
                     help='Use least square GAN or vanilla GAN. Default is LSGAN.')
 parser.add_argument('--load_model', type=str, default=None,
                     help='Load a model to continue training where you left off.')
-parser.add_argument('--num_epochs' type=int, default=10000,
-                    help='The number of epochs to train the GAN on.')
+parser.add_argument('--epoch', type=int, default=1,
+                    help='Epoch to start training on in case loading model in')
 parser.add_argument('--display_frequency', type=int, default=100,
                     help='The number of epochs to train GAN on before printing loss')
 parser.add_argument('--checkpoint_frequency', type=int, default=1000,
@@ -93,19 +95,20 @@ def train():
             pass
         else:
             sess.run(tf.global_variables_initializer())
-            start_epoch = 1
+            step = 0
 
-        for epoch in range(start_epoch, opt.num_epochs + 1):
+        for epoch in range(opt.epoch, opt.niter + opt.niter_decay + 1):
             for batch in range(model.num_batches):
-                pass
+                step += 1
 
             # display the losses of the Generators and Discriminators
-            if epoch % opt.display_frequency == 0:
+            if step % opt.display_frequency == 0:
                 pass
 
             # save a checkpoint of the model to the /checkpoints directory
             if epoch % opt.checkpoint_frequency == 0:
                 pass
+
 
 if __name__ == '__main__':
     train()
