@@ -1,9 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
-def Discriminator():
-    def __init__():
+class Discriminator():
+    def __init__(self):
         pass
 
-    def __call_():
+    def __call__(self):
         pass
