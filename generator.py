@@ -15,7 +15,7 @@ class Generator():
                  dropout=False,
                  is_training=True,
                  name=None):
-        self.in_channels = in_channels,
+        self.in_channels = in_channels
         self.out_channels = out_channels
         self.netG = netG
         self.ngf = ngf
@@ -28,7 +28,7 @@ class Generator():
         self.reuse = False
 
     def __call__(self, input):
-        with tf.variable_scope(scope=self.name):
+        with tf.variable_scope(self.name):
             if self.netG is 'resnet_9blocks':
                 output = self.resnet_generator(input, self.in_channels, self.out_channels, self.ngf,
                                                self.norm_type, self.init_type, self.init_gain, self.dropout,
@@ -49,6 +49,7 @@ class Generator():
 
         # set reuse to True for next call
         self.reuse = True
+        self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
         return output
 
@@ -116,7 +117,7 @@ class Generator():
                       norm_type=norm_type, is_training=is_training, scope='u64', reuse=self.reuse)
 
         # 7x7 convolution-instance norm-relu layer with 3 filters and stride 1
-        c7s1_3 = ops.conv(input, in_channels=ngf, out_channels=out_channels, filter_size=7,
+        c7s1_3 = ops.conv(u64, in_channels=ngf, out_channels=out_channels, filter_size=7,
                           stride=1, weight_init_type=init_type, weight_init_gain=init_gain,
                           norm_type=None, activation_type='tanh', is_training=is_training,
                           scope='c7s1-3', reuse=self.reuse)

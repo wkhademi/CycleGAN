@@ -151,7 +151,9 @@ def uk(input,
         input_shape = input.get_shape().as_list()
 
         # weight initialization
-        weights = bilinear_upsample_filter(filter_size, stride, in_channels, out_channels)
+        #weights = bilinear_upsample_filter(filter_size, stride, in_channels, out_channels)
+        weights = __weights_init(filter_size, out_channels, in_channels,
+                                 init_type=weight_init_type, init_gain=weight_init_gain)
 
         layer = tf.nn.conv2d_transpose(input, weights,
                                        output_shape=[input_shape[0], out_shape, out_shape, out_channels],
@@ -180,9 +182,9 @@ def __normalization(inputs,
         Returns:
             norm: Normalized inputs
     """
-    if norm_type is 'instance':
+    if norm_type is 'batch':
         norm = tf.contrib.layers.batch_norm(inputs, is_training=is_training)
-    elif norm_type is 'batch':
+    elif norm_type is 'instance':
         norm = tf.contrib.layers.instance_norm(inputs)
     else:
         norm = inputs
@@ -219,8 +221,8 @@ def __activation_fn(inputs,
 
 
 def __weights_init(size,
-                   in,
-                   out,
+                   in_channels,
+                   out_channels,
                    init_type='normal',
                    init_gain=1.0):
     """
@@ -243,8 +245,8 @@ def __weights_init(size,
     elif init_type is 'orthogonal':
         init = tf.initializers.orthogonal()
 
-    weights = tf.get_variable("weights", shape=[size, size, in, out],
-                              dtype=tf.float32, initializer=init)
+    weights = tf.get_variable("weights", shape=[size, size, in_channels, out_channels],
+                              dtype=tf.float64, initializer=init)
     weights = init_gain * weights
 
     return weights
@@ -262,7 +264,7 @@ def __biases_init(size,
         Returns:
             biases: Bias vector
     """
-    biases = tf.get_variable("biases", shape=[size], dtype=tf.float32,
+    biases = tf.get_variable("biases", shape=[size], dtype=tf.float64,
                              initializer=tf.constant_initializer(constant))
 
     return biases

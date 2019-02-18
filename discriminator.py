@@ -29,7 +29,7 @@ class Discriminator():
         self.sigmoid = 'sigmoid' if gan_mode is not 'lsgan' else None
 
     def __call__(self, input):
-        with tf.variable_scope(scope=self.name):
+        with tf.variable_scope(self.name):
             if self.netD is 'basic': # 70x70 PatchGAN Discriminator
                 output = self.n_layer_discriminator(input, self.in_channels, self.n_layers, self.ndf,
                                                     self.norm_type, self.init_type, self.init_gain,
@@ -39,14 +39,15 @@ class Discriminator():
                                                     self.norm_type, self.init_type, self.init_gain,
                                                     self.is_training, self.sigmoid)
             elif self.netD is 'pixel': # 1x1 PatchGAN Discriminator
-                print("Not implemented yet...")
-                sys.exit(1)
+                output = self.pixel_discriminator(input, self.in_channels, self.ndf, self.norm_type,
+                                                  self.init_type, self.init_gain, self.is_training, self.sigmoid)
             else:
                 print("Invalid discriminator architecture.")
                 sys.exit(1)
 
         # set reuse to True for next call
         self.reuse = True
+        self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
         return output
 
@@ -82,7 +83,7 @@ class Discriminator():
 
         # nth layer of 4x4 convolutions uses a stride of 1
         nf_mult_prev = nf_mult
-        nf_mult = (2 ** n_layers, 8)
+        nf_mult = min(2 ** n_layers, 8)
         layer = ops.conv(layer, in_channels=ndf*nf_mult_prev, out_channels=ndf*nf_mult,
                          filter_size=4, stride=1, weight_init_type=init_type, weight_init_gain=init_gain,
                          norm_type=norm_type, activation_type='LeakyReLU', is_training=is_training,
@@ -95,8 +96,32 @@ class Discriminator():
 
         return layer
 
-    def pixel_discriminator(self):
+    def pixel_discriminator(self,
+                            input,
+                            in_channels=3,
+                            ndf=64,
+                            norm_type='instance',
+                            init_type='normal',
+                            init_gain=1.0,
+                            is_training=True,
+                            sigmoid=None):
         """
             1x1 PatchGAN Discriminator (pixelGAN)
         """
-        pass
+        # 1x1 convolution with 64 filters and no normalization
+        layer = ops.conv(input, in_channels=in_channels, out_channels=ndf, filter_size=1,
+                         stride=1, weight_init_type=init_type, weight_init_gain=init_gain, norm_type=None,
+                         activation_type='LeakyReLU', is_training=is_training, scope='layer0', reuse=self.reuse)
+
+        # 1x1 convolution with 128 filters and instance normalization
+        layer = ops.conv(layer, in_channels=ndf, out_channels=2*ndf, filter_size=1,
+                         stride=1, weight_init_type=init_type, weight_init_gain=init_gain,
+                         norm_type=norm_type, activation_type='LeakyReLU', is_training=is_training,
+                         scope='layer1', reuse=self.reuse)
+
+        # produces a single channel prediction map
+        layer = ops.conv(layer, in_channels=2*ndf, out_channels=1, filter_size=1, stride=1,
+                         weight_init_type=init_type, weight_init_gain=init_gain, norm_type=None,
+                         activation_type=sigmoid, is_training=is_training, scope='layer2', reuse=self.reuse)
+
+        return layer

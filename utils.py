@@ -1,5 +1,6 @@
 import os
 import random
+import numpy as np
 from PIL import Image
 from sklearn.utils import shuffle
 
@@ -59,9 +60,10 @@ def get_image_paths(dir):
     image_paths = []
 
     # traverse directory to obtain only paths to images
-    for paths in sorted(os.walk(dir)):
-        if any(paths.endswith(extensions) for extension in IMG_EXTENSIONS):
-            image_paths.append(os.path.expanduser(paths))
+    for dir_name, _, paths in sorted(os.walk(dir)):
+        for path in paths:
+            if any(path.endswith(extensions) for extensions in IMG_EXTENSIONS):
+                image_paths.append(os.path.expanduser(dir_name + '/' + path))
 
     return image_paths
 
@@ -99,7 +101,7 @@ def augment(opt, image, grayscale=False, normalize=True):
     if opt.flip:
         augmented_image = __flip(augmented_image)
 
-    if opt.normalize:
+    if normalize:
         augmented_image = __normalize(augmented_image)
 
     return augmented_image
@@ -110,7 +112,7 @@ def __resize(image, new_size):
         Resize an image to a specific height and width.
     """
     size = [new_size, new_size]
-    image.resize(new_size, Image.BICUBIC)
+    image.resize(size, Image.BICUBIC)
 
     return image
 
@@ -152,7 +154,7 @@ def __make_power_2(image, base):
     new_width = int((old_width / base) * base)
     new_height = int((old_height / base) * base)
 
-    if (new_width == old_width) and (new_height == old_height)
+    if (new_width == old_width) and (new_height == old_height):
         return image
 
     image.resize([new_width, new_height], Image.BICUBIC)
@@ -174,7 +176,9 @@ def __flip(image):
 
 def __normalize(image):
     """
-        Normalize each channel by subtracting a mean of 0.5 and dividing by a
-        standard deviation of 0.5
+        Normalize each channel by subtracting a mean of each channel and dividing by a
+        standard deviation of each channel
     """
-    return (image - 0.5) / 0.5
+    mean = np.mean(image, axis=(0, 1))
+    std_dev = np.std(image, axis=(0,1))
+    return (np.array(image) - mean) / std_dev
