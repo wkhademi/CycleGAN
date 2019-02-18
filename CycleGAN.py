@@ -13,15 +13,6 @@ class CycleGAN():
         # create an iterator for our datasets
         self.dataloader = DataLoader(self.opt)
 
-        # build the Generator models for each GAN
-        self.G = Generator(self.opt, self.is_training, name='G')
-        self.F = Generator(self.opt, self.is_training, name='F')
-
-        # build the Discriminator models for each GAN only if in training phase
-        if is_training:
-            self.D_X = Discriminator(self.opt, self.is_training, name='D_X')
-            self.D_Y = Discriminator(self.opt, self.is_training, name='D_Y')
-
         # create placeholders for real and generated training/test data
         self.realA = tf.placeholder(tf.float32, shape=(None, self.opt.image_size, self.opt.image_size, self.in_channels) 'Real Set A')
         self.realB = tf.placeholder(tf.float32, shape=(None, self.opt.image_size, self.opt.image_size, self.out_channels) 'Real Set B')
@@ -32,7 +23,25 @@ class CycleGAN():
         pass
 
     def build_model(self):
-        pass
+        """
+            Build CycleGAN graph and initialize optimizer and loss functions.
+        """
+        # build the Generator models for each GAN
+        self.G = Generator(self.opt.in_channels, self.opt.out_channels, self.opt.netG,
+                           self.opt.ngf, self.opt.norm_type, self.opt.init_type,
+                           self.opt.init_gain, self.is_training, name='G')
+        self.F = Generator(self.opt.in_channels, self.opt.out_channels, self.opt.netG,
+                           self.opt.ngf, self.opt.norm_type, self.opt.init_type,
+                           self.opt.init_gain, self.is_training, name='F')
+
+        # build the Discriminator models for each GAN only if in training phase
+        if is_training:
+            self.D_X = Discriminator(self.opt.netD, self.opt.n_layers, self.opt.ndf,
+                                     self.opt.norm_type, self.opt.init_type, self.opt.init_gain,
+                                     self.is_training, self.opt.gan_mode, name='D_X')
+            self.D_Y = Discriminator(self.opt.netD, self.opt.n_layers, self.opt.ndf,
+                                     self.opt.norm_type, self.opt.init_type, self.opt.init_gain,
+                                     self.is_training, self.opt.gan_mode, name='D_Y')
 
     def G_loss(self, D, fake, real_label=1.0, epsilon=1e-12):
         """

@@ -43,7 +43,13 @@ parser.add_argument('--lr_policy', type=str, default='linear',
 parser.add_argument('--lr_decay_iters', type=int, default=50,
                     help='multiply by a gamma every lr_decay_iters iterations')
 parser.add_argument('--norm_type', type=str, default='instance',
-                    help='Either instance norm or batch norm. Default is instance norm.')
+                    help='Type of normalization. [instance | batch]')
+parser.add_argument('--init_type', type=str, default='normal',
+                    help='Type of initialization of weights [normal | xavier | orthogonal]')
+parser.add_argument('--init_gain', type=float, default=0.2,
+                    help='Scaling factor for normal, xavier, and orthogonal')
+parser.add_argument('--dropout', type=bool, default=False,
+                    help='Whether or not to include dropout in generator')
 parser.add_argument('--lambda_A', type=float, default=10.0,
                     help='weight for forward cycle loss (A -> B -> A)')
 parser.add_argument('--lambda_B', type=float, default=10.0,
@@ -54,6 +60,10 @@ parser.add_argument('--ndf', type=int, default=64,
                     help='# of discrim filters in first conv layer. Default is 64.')
 parser.add_argument('--netG', type=str, default='resnet_9blocks',
                     help='Specify generator architecture. [resnet_9blocks | resnet_6blocks | unet_256 | unet_128]')
+parser.add_argument('--netD', type=str, default='basic',
+                    help='Specify discriminator architecture [basic | n_layers | pixel]. Basic model is 70x70 PatchGAN')
+parser.add_argument('--n_layers_D', type=int, default=3,
+                    help='# of layers for discriminator. Only used if netD==n_layers')
 parser.add_argument('--pool_size', type=int, default=50,
                     help='the size of image buffer that stores previously generated images')
 parser.add_argument('--gan_mode', type=str, default='lsgan',
@@ -82,12 +92,8 @@ def train():
             print("Failed to make new checkpoint directory.")
             sys.exit(1)
 
-    CycleGAN = CycleGAN(opt, is_training=True)
-
-    # set the direction data will go [AtoB | BtoA]
-    CycleGAN.set_input()
-
     # build the CycleGAN model
+    CycleGAN = CycleGAN(opt, is_training=True)
     model = CycleGAN.build_model()
 
     with tf.Session() as sess:
