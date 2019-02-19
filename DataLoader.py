@@ -78,8 +78,8 @@ class DataLoader():
 
         self.step += 1
 
-        A = tf.convert_to_tensor(np.stack(A))
-        B = tf.convert_to_tensor(np.stack(B))
+        A = tf.convert_to_tensor(np.stack(A), dtype=tf.float32)
+        B = tf.convert_to_tensor(np.stack(B), dtype=tf.float32)
 
         return A, B
 

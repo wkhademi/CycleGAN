@@ -94,7 +94,7 @@ def augment(opt, image, grayscale=False, normalize=True):
     elif opt.preprocess is 'scale_width_and_crop':
         augmented_image = __scale_width(augmented_image, opt.load_size)
         augmented_image = __crop(augmented_image, opt.crop_size)
-
+        
     if opt.preprocess is None:
         augmented_image = __make_power_2(augmented_image, base=4)
 

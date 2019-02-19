@@ -246,7 +246,7 @@ def __weights_init(size,
         init = tf.initializers.orthogonal()
 
     weights = tf.get_variable("weights", shape=[size, size, in_channels, out_channels],
-                              dtype=tf.float64, initializer=init)
+                              dtype=tf.float32, initializer=init)
     weights = init_gain * weights
 
     return weights
@@ -264,7 +264,7 @@ def __biases_init(size,
         Returns:
             biases: Bias vector
     """
-    biases = tf.get_variable("biases", shape=[size], dtype=tf.float64,
+    biases = tf.get_variable("biases", shape=[size], dtype=tf.float32,
                              initializer=tf.constant_initializer(constant))
 
     return biases
