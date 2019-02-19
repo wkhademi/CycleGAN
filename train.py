@@ -98,8 +98,8 @@ def train():
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
     with tf.control_dependencies(update_ops):
-        G_loss, D_Y_loss, F_loss, D_X_loss = cyclegan.get_losses(realX, realY, fakeX, fakeY)
-        G_opt, D_Y_opt, F_opt, D_X_opt = cyclegan.get_optimizers(G_loss, D_Y_loss, F_loss, D_X_loss)
+        Gen_loss, D_Y_loss, D_X_loss = cyclegan.get_losses(realX, realY, fakeX, fakeY)
+        Gen_opt, D_Y_opt, D_X_opt = cyclegan.get_optimizers(Gen_loss, D_Y_loss, D_X_loss)
 
     # create image pools for holding previously generated images
     fakeX_pool = ImagePool(opt.pool_size)
@@ -124,18 +124,17 @@ def train():
         try:
             for step in range(start_step, opt.niter + opt.niter_decay + 1):
                 # calculate losses for the generators and discriminators and minimize them
-                G_loss_val, D_Y_loss_val, F_loss_val, D_X_loss_val, \
-                fakeX_imgs, fakeY_imgs, _, _, _, _ = sess.run([G_loss, D_Y_loss, F_loss, D_X_loss, fakeX,
-                                                               fakeY, G_opt, D_Y_opt, F_opt, D_X_opt],
+                Gen_loss_val, D_Y_loss_val, D_X_loss_val, \
+                fakeX_imgs, fakeY_imgs, _, _, _ = sess.run([Gen_loss, D_Y_loss, D_X_loss, fakeX,
+                                                               fakeY, Gen_opt, D_Y_opt, D_X_opt],
                                                               feed_dict={cyclegan.poolX: fakeX_pool.query(fakeX_imgs),
                                                                          cyclegan.poolY: fakeY_pool.query(fakeY_imgs)})
 
                 # display the losses of the Generators and Discriminators
                 if step % opt.display_frequency == 0:
                     print('Step {}:'.format(step))
-                    print('G_loss: {}'.format(G_loss_val))
+                    print('Gen_loss: {}'.format(Gen_loss_val))
                     print('D_Y_loss: {}'.format(D_Y_loss_val))
-                    print('F_loss: {}'.format(F_loss_val))
                     print('D_X_loss: {}'.format(D_X_loss_val))
 
                 # save a checkpoint of the model to the `checkpoints` directory

@@ -77,38 +77,34 @@ class CycleGAN():
                 fakeY: A batch of generated images replication Domain Y
 
             Returns:
-                G_loss: Generator mapping X->Y loss
+                Gen_loss: Generators combined loss
                 D_Y_loss: Discriminator for Domain Y images loss
-                F_loss: Generator mapping Y->X loss
                 D_X_loss: Discriminator for Domain X images loss
         """
         # calculate cycle cycle consistency loss
         cc_loss = self.cycle_consistency_loss(self.G, self.F, fakeX, fakeY, realX, realY)
 
         # generator losses
-        G_loss = self.G_loss(self.D_Y, fakeY) + cc_loss
-        F_loss = self.G_loss(self.D_X, fakeX) + cc_loss
+        Gen_loss = self.G_loss(self.D_Y, fakeY) + self.G_loss(self.D_X, fakeX) + cc_loss
 
         # discriminator losses
         D_X_loss = self.D_loss(self.D_X, realX, self.poolX)
         D_Y_loss = self.D_loss(self.D_Y, realY, self.poolY)
 
-        return G_loss, D_Y_loss, F_loss, D_X_loss
+        return Gen_loss, D_Y_loss, D_X_loss
 
-    def get_optimizers(self, G_loss, D_Y_loss, F_loss, D_X_loss):
+    def get_optimizers(self, Gen_loss, D_Y_loss, D_X_loss):
         """
             Build the optimizer part of the graph out for CycleGAN
 
             Args:
-                G_loss: Generator mapping X->Y loss
+                Gen_loss: Generators combined loss
                 D_Y_loss: Discriminator for Domain Y images loss
-                F_loss: Generator mapping Y->X loss
                 D_X_loss: Discriminator for Domain X images loss
 
             Returns:
-                G_opt: Optimizer for generator mapping X->Y
+                Gen_opt: Optimizer for generators
                 D_Y_opt: Optimizer for discriminator for Domain Y
-                F_opt: Optimizer for generator mapping Y->X
                 D_X_opt: Optimizer for discriminator for Domain X
         """
         def make_optimizer(loss, variables, name='Adam'):
@@ -135,12 +131,11 @@ class CycleGAN():
 
             return learning_step
 
-        G_opt = make_optimizer(G_loss, self.G.variables, name='Adam_G')
+        Gen_opt = make_optimizer(Gen_loss, self.G.variables + self.F.variables, name='Adam_Gen')
         D_Y_opt = make_optimizer(D_Y_loss, self.D_Y.variables, name='Adam_D_Y')
-        F_opt = make_optimizer(F_loss, self.F.variables, name='Adam_F')
         D_X_opt = make_optimizer(D_X_loss, self.D_X.variables, name='Adam_D_X')
 
-        return G_opt, D_Y_opt, F_opt, D_X_opt
+        return Gen_opt, D_Y_opt, D_X_opt
 
     def G_loss(self, D, fake, real_label=1.0, epsilon=1e-12):
         """
