@@ -118,32 +118,28 @@ def train():
             sess.run(tf.global_variables_initializer())
             start_step = 1
 
+        # generate fake images
+        fakeX_imgs, fakeY_imgs = sess.run([fakeX, fakeY])
+
         try:
             for step in range(start_step, opt.niter + opt.niter_decay + 1):
-                # generate fake images
-                fakeX_imgs, fakeY_imgs = sess.run([fakeX, fakeY])
-
-                # calculate losses for the generators and discriminators
-                G_loss_val, D_Y_loss_val, F_loss_val, D_X_loss_val = sess.run([G_loss, D_Y_loss, F_loss, D_X_loss],
-                                                                              feed_dict={cyclegan.poolX: fakeX_pool.query(fakeX_imgs),
-                                                                                         cyclegan.poolY: fakeY_pool.query(fakeY_imgs)})
-
-                # update variables in model
-                sess.run([G_opt, D_Y_opt, F_opt, D_X_opt],
-                         feed_dict={cyclegan.poolX: fakeX_pool.query(fakeX_imgs),
-                                    cyclegan.poolY: fakeY_pool.query(fakeY_imgs)})
+                # calculate losses for the generators and discriminators and minimize them
+                G_loss_val, D_Y_loss_val, F_loss_val, D_X_loss_val, \
+                fakeX_imgs, fakeY_imgs, _, _, _, _ = sess.run([G_loss, D_Y_loss, F_loss, D_X_loss, fakeX,
+                                                               fakeY, G_opt, D_Y_opt, F_opt, D_X_opt],
+                                                              feed_dict={cyclegan.poolX: fakeX_pool.query(fakeX_imgs),
+                                                                         cyclegan.poolY: fakeY_pool.query(fakeY_imgs)})
 
                 # display the losses of the Generators and Discriminators
                 if step % opt.display_frequency == 0:
-                    print('''STEP {}:\n
-                             G_loss: {}\n
-                             D_Y_loss: {}\n
-                             F_loss: {}\n
-                             D_X_loss: {}\n'''.format(step, G_loss_val, D_Y_loss_val,
-                                                    F_loss_val, D_X_loss_val))
+                    print('Step {}:'.format(step))
+                    print('G_loss: {}'.format(G_loss_val))
+                    print('D_Y_loss: {}'.format(D_Y_loss_val))
+                    print('F_loss: {}'.format(F_loss_val))
+                    print('D_X_loss: {}'.format(D_X_loss_val))
 
                 # save a checkpoint of the model to the `checkpoints` directory
-                if epoch % opt.checkpoint_frequency == 0:
+                if step % opt.checkpoint_frequency == 0:
                     save_path = saver.save(sess, checkpoint + '/model.ckpt', global_step=step)
                     print("Model saved as {}".format(save_path))
 
