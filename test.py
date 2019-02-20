@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 from datetime import datetime
 from CycleGAN import CycleGAN
+from DataLoader import DataLoader
 
 
 parser = argparse.ArgumentParser()
@@ -26,9 +27,9 @@ parser.add_argument('--load_size', type=int, default=286,
                     help='Default size to load in an image.')
 parser.add_argument('--crop_size', type=int, default=256,
                     help='Size to crop an image to.')
-parser.add_arguemnt('--preprocess', type=str, default='resize_and_crop',
+parser.add_argument('--preprocess', type=str, default='resize_and_crop',
                     help='Augmentation to be performed when loading in an image. [resize_and_crop | crop | scale_width | scale_width_and_crop | None]')
-parser.add_argument('--flip', type=bool, default=True,
+parser.add_argument('--flip', type=bool, default=False,
                     help='Flip images during augmentation.')
 # testing and model arguments
 parser.add_argument('--norm_type', type=str, default='instance',
@@ -59,14 +60,19 @@ def test():
         print("Must load in a model to test on.")
         sys.exit(1)
 
+    # create an iterator for datasets
+    dataloader = iter(DataLoader(opt))
+
     # build CycleGAN graph
     cyclegan = CycleGAN(opt, is_training=False)
     cyclegan.build_model()
 
     # get real and fake data
-    _, _, fakeA, fakeB =  cyclegan.get_data()
+    fakeA, fakeB =  cyclegan.generate()
 
     with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+
         # get latest checkpoint of loaded model
         ckpt = tf.train.get_checkpoint_state(checkpoint)
         meta_graph_path = ckpt.model_checkpoint_path + '.meta'
@@ -84,9 +90,14 @@ def test():
             sys.exit(1)
 
         # generate new images and save them to the `samples` directory
-        for _ in range(opt.num_samples):
-            generated_image = sess.run(fakeImg)
-            utils.save_image(generated_image, samples_dir)
+        for idx in range(opt.num_samples):
+            realA, realB = next(dataloader)
+
+            generated_image = sess.run(fakeImg, feed_dict={cyclegan.realA: realA,
+                                                           cyclegan.realB: realB})
+
+            image_name = 'sample' + str(idx) + '.jpg'
+            utils.save_image(generated_image, os.path.join(samples_dir, image_name))
 
 
 if __name__ == '__main__':

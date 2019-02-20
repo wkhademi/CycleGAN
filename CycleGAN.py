@@ -9,18 +9,18 @@ class CycleGAN():
         self.opt = opt
         self.is_training = is_training
 
-        self.realX = tf.placeholder(dtype=tf.float32,
+        self.realA = tf.placeholder(dtype=tf.float32,
                                     shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.in_channels),
-                                    name='realX')
-        self.realY = tf.placeholder(dtype=tf.float32,
+                                    name='realA')
+        self.realB = tf.placeholder(dtype=tf.float32,
                                     shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.out_channels),
-                                    name='realY')
-        self.poolX = tf.placeholder(dtype=tf.float32,
+                                    name='realB')
+        self.poolA = tf.placeholder(dtype=tf.float32,
                                     shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.in_channels),
-                                    name='poolX')
-        self.poolY = tf.placeholder(dtype=tf.float32,
+                                    name='poolA')
+        self.poolB = tf.placeholder(dtype=tf.float32,
                                     shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.out_channels),
-                                    name='poolY')
+                                    name='poolB')
 
     def set_input(self):
         """
@@ -42,65 +42,65 @@ class CycleGAN():
 
         # build the Discriminator graphs for each GAN only if in training phase
         if self.is_training:
-            self.D_X = Discriminator(self.opt.in_channels, self.opt.netD, self.opt.n_layers, self.opt.ndf,
+            self.D_A = Discriminator(self.opt.in_channels, self.opt.netD, self.opt.n_layers, self.opt.ndf,
                                      self.opt.norm_type, self.opt.init_type, self.opt.init_gain,
-                                     self.is_training, self.opt.gan_mode, name='D_X')
-            self.D_Y = Discriminator(self.opt.out_channels, self.opt.netD, self.opt.n_layers, self.opt.ndf,
+                                     self.is_training, self.opt.gan_mode, name='D_A')
+            self.D_B = Discriminator(self.opt.out_channels, self.opt.netD, self.opt.n_layers, self.opt.ndf,
                                      self.opt.norm_type, self.opt.init_type, self.opt.init_gain,
-                                     self.is_training, self.opt.gan_mode, name='D_Y')
+                                     self.is_training, self.opt.gan_mode, name='D_B')
 
     def generate(self):
         """
             Generate fake data batches to be used for training CycleGAN
 
             Returns:
-                fakeX: A batch of generated images replicating Domain X
-                fakeY: A batch of generated images replication Domain Y
+                fakeA: A batch of generated images replicating Domain A
+                fakeB: A batch of generated images replication Domain B
         """
         # generate fake images
-        fakeY = self.G(self.realX)
-        fakeX = self.F(self.realY)
+        fakeB = self.G(self.realA)
+        fakeA = self.F(self.realB)
 
-        return fakeX, fakeY
+        return fakeA, fakeB
 
-    def get_losses(self, fakeX, fakeY):
+    def get_losses(self, fakeA, fakeB):
         """
             Build the loss part of the graph for CycleGAN
 
             Args:
-                fakeX: A batch of generated images replicating Domain X
-                fakeY: A batch of generated images replication Domain Y
+                fakeA: A batch of generated images replicating Domain A
+                fakeB: A batch of generated images replication Domain B
 
             Returns:
                 Gen_loss: Generators combined loss
-                D_Y_loss: Discriminator for Domain Y images loss
-                D_X_loss: Discriminator for Domain X images loss
+                D_B_loss: Discriminator for Domain B images loss
+                D_A_loss: Discriminator for Domain A images loss
         """
         # calculate cycle cycle consistency loss
-        cc_loss = self.cycle_consistency_loss(self.G, self.F, fakeX, fakeY, self.realX, self.realY)
+        cc_loss = self.cycle_consistency_loss(self.G, self.F, fakeA, fakeB, self.realA, self.realB)
 
         # generator losses
-        Gen_loss = self.G_loss(self.D_Y, fakeY) + self.G_loss(self.D_X, fakeX) + cc_loss
+        Gen_loss = self.G_loss(self.D_B, fakeB) + self.G_loss(self.D_A, fakeA) + cc_loss
 
         # discriminator losses
-        D_X_loss = self.D_loss(self.D_X, self.realX, self.poolX)
-        D_Y_loss = self.D_loss(self.D_Y, self.realY, self.poolY)
+        D_A_loss = self.D_loss(self.D_A, self.realA, self.poolA)
+        D_B_loss = self.D_loss(self.D_B, self.realB, self.poolB)
 
-        return Gen_loss, D_Y_loss, D_X_loss
+        return Gen_loss, D_B_loss, D_A_loss
 
-    def get_optimizers(self, Gen_loss, D_Y_loss, D_X_loss):
+    def get_optimizers(self, Gen_loss, D_B_loss, D_A_loss):
         """
             Build the optimizer part of the graph out for CycleGAN
 
             Args:
                 Gen_loss: Generators combined loss
-                D_Y_loss: Discriminator for Domain Y images loss
-                D_X_loss: Discriminator for Domain X images loss
+                D_B_loss: Discriminator for Domain B images loss
+                D_A_loss: Discriminator for Domain A images loss
 
             Returns:
                 Gen_opt: Optimizer for generators
-                D_Y_opt: Optimizer for discriminator for Domain Y
-                D_X_opt: Optimizer for discriminator for Domain X
+                D_B_opt: Optimizer for discriminator for Domain B
+                D_A_opt: Optimizer for discriminator for Domain A
         """
         def make_optimizer(loss, variables, name='Adam'):
             """
@@ -127,10 +127,10 @@ class CycleGAN():
             return learning_step
 
         Gen_opt = make_optimizer(Gen_loss, self.G.variables + self.F.variables, name='Adam_Gen')
-        D_Y_opt = make_optimizer(D_Y_loss, self.D_Y.variables, name='Adam_D_Y')
-        D_X_opt = make_optimizer(D_X_loss, self.D_X.variables, name='Adam_D_X')
+        D_B_opt = make_optimizer(D_B_loss, self.D_B.variables, name='Adam_D_B')
+        D_A_opt = make_optimizer(D_A_loss, self.D_A.variables, name='Adam_D_A')
 
-        return Gen_opt, D_Y_opt, D_X_opt
+        return Gen_opt, D_B_opt, D_A_opt
 
     def G_loss(self, D, fake, real_label=1.0, epsilon=1e-12):
         """
@@ -177,24 +177,24 @@ class CycleGAN():
 
         return discriminator_loss
 
-    def cycle_consistency_loss(self, G, F, fakeX, fakeY, realX, realY):
+    def cycle_consistency_loss(self, G, F, fakeA, fakeB, realA, realB):
         """
             Find the forward loss and backward loss of our GANS.
 
             Use L1 norm for calculating error between mapping and real.
 
             Args:
-                G: Generator that maps Domain X -> Domain Y
-                F: Generator that maps Domain Y -> Domain X
-                fakeX: Fake images from Domain X generated by F
-                fakeY: Fake images from Domain Y generated by G
-                realX: Real images from Domain X
-                realY: Real images from Domain Y
+                G: Generator that maps Domain A -> Domain B
+                F: Generator that maps Domain B -> Domain A
+                fakeA: Fake images from Domain A generated by F
+                fakeB: Fake images from Domain B generated by G
+                realA: Real images from Domain A
+                realB: Real images from Domain B
 
             Returns:
                 loss: The cycle consistency loss of our network
         """
-        forward_loss = tf.reduce_mean(tf.abs(F(fakeY) - realX))
-        backward_loss = tf.reduce_mean(tf.abs(G(fakeX) - realY))
+        forward_loss = tf.reduce_mean(tf.abs(F(fakeB) - realA))
+        backward_loss = tf.reduce_mean(tf.abs(G(fakeA) - realB))
         loss = (self.opt.lambda_A * forward_loss) + (self.opt.lambda_B * backward_loss)
         return loss
