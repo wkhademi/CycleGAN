@@ -2,7 +2,6 @@ import os
 import sys
 import utils
 import numpy as np
-import tensorflow as tf
 from PIL import Image
 
 class DataLoader():
@@ -78,8 +77,8 @@ class DataLoader():
 
         self.step += 1
 
-        A = tf.convert_to_tensor(np.stack(A), dtype=tf.float32)
-        B = tf.convert_to_tensor(np.stack(B), dtype=tf.float32)
+        A = np.stack(A)
+        B = np.stack(B)
 
         return A, B
 

@@ -148,7 +148,7 @@ def uk(input,
             layer:
     """
     with tf.variable_scope(scope, reuse=reuse):
-        input_shape = input.get_shape().as_list()
+        batch_size = tf.shape(input)[0]
 
         # weight initialization
         #weights = bilinear_upsample_filter(filter_size, stride, in_channels, out_channels)
@@ -156,7 +156,7 @@ def uk(input,
                                  init_type=weight_init_type, init_gain=weight_init_gain)
 
         layer = tf.nn.conv2d_transpose(input, weights,
-                                       output_shape=[input_shape[0], out_shape, out_shape, out_channels],
+                                       output_shape=[batch_size, out_shape, out_shape, out_channels],
                                        strides=[1, stride, stride, 1], padding='SAME')
 
         # instance, batch, or no normalization

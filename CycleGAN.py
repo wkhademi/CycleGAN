@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-from DataLoader import DataLoader
 from generator import Generator
 from discriminator import Discriminator
 
@@ -10,6 +9,12 @@ class CycleGAN():
         self.opt = opt
         self.is_training = is_training
 
+        self.realX = tf.placeholder(dtype=tf.float32,
+                                    shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.in_channels),
+                                    name='realX')
+        self.realY = tf.placeholder(dtype=tf.float32,
+                                    shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.out_channels),
+                                    name='realY')
         self.poolX = tf.placeholder(dtype=tf.float32,
                                     shape=(None, self.opt.crop_size, self.opt.crop_size, self.opt.in_channels),
                                     name='poolX')
@@ -27,9 +32,6 @@ class CycleGAN():
         """
             Build the forward pass of the graph for CycleGAN
         """
-        # create an iterator for our datasets
-        self.dataloader = iter(DataLoader(self.opt))
-
         # build the Generator graphs for each GAN
         self.G = Generator(self.opt.in_channels, self.opt.out_channels, self.opt.netG,
                            self.opt.ngf, self.opt.norm_type, self.opt.init_type,
@@ -47,32 +49,25 @@ class CycleGAN():
                                      self.opt.norm_type, self.opt.init_type, self.opt.init_gain,
                                      self.is_training, self.opt.gan_mode, name='D_Y')
 
-    def get_data(self):
+    def generate(self):
         """
-            Get real and fake data batches to be used for training CycleGAN
+            Generate fake data batches to be used for training CycleGAN
 
             Returns:
-                realX: A batch of real images from Domain X
-                realY: A batch of real images from Domain Y
                 fakeX: A batch of generated images replicating Domain X
                 fakeY: A batch of generated images replication Domain Y
         """
-        # get a batch of real images
-        realX, realY = next(self.dataloader)
-
         # generate fake images
-        fakeY = self.G(realX)
-        fakeX = self.F(realY)
+        fakeY = self.G(self.realX)
+        fakeX = self.F(self.realY)
 
-        return realX, realY, fakeX, fakeY
+        return fakeX, fakeY
 
-    def get_losses(self, realX, realY, fakeX, fakeY):
+    def get_losses(self, fakeX, fakeY):
         """
             Build the loss part of the graph for CycleGAN
 
             Args:
-                realX: A batch of real images from Domain X
-                realY: A batch of real images from Domain Y
                 fakeX: A batch of generated images replicating Domain X
                 fakeY: A batch of generated images replication Domain Y
 
@@ -82,14 +77,14 @@ class CycleGAN():
                 D_X_loss: Discriminator for Domain X images loss
         """
         # calculate cycle cycle consistency loss
-        cc_loss = self.cycle_consistency_loss(self.G, self.F, fakeX, fakeY, realX, realY)
+        cc_loss = self.cycle_consistency_loss(self.G, self.F, fakeX, fakeY, self.realX, self.realY)
 
         # generator losses
         Gen_loss = self.G_loss(self.D_Y, fakeY) + self.G_loss(self.D_X, fakeX) + cc_loss
 
         # discriminator losses
-        D_X_loss = self.D_loss(self.D_X, realX, self.poolX)
-        D_Y_loss = self.D_loss(self.D_Y, realY, self.poolY)
+        D_X_loss = self.D_loss(self.D_X, self.realX, self.poolX)
+        D_Y_loss = self.D_loss(self.D_Y, self.realY, self.poolY)
 
         return Gen_loss, D_Y_loss, D_X_loss
 

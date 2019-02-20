@@ -5,6 +5,7 @@ import tensorboard
 import numpy as np
 import tensorflow as tf
 from datetime import datetime
+from DataLoader import DataLoader
 from ImagePool import ImagePool
 from CycleGAN import CycleGAN
 
@@ -90,22 +91,25 @@ def train():
             print("Failed to make new checkpoint directory.")
             sys.exit(1)
 
+    # create an iterator for datasets
+    dataloader = iter(DataLoader(opt))
+
     # build the CycleGAN graph
     cyclegan = CycleGAN(opt, is_training=True)
     cyclegan.build_model()
-    realX, realY, fakeX, fakeY = cyclegan.get_data()
+    fakeX, fakeY = cyclegan.generate()
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
     with tf.control_dependencies(update_ops):
-        Gen_loss, D_Y_loss, D_X_loss = cyclegan.get_losses(realX, realY, fakeX, fakeY)
+        Gen_loss, D_Y_loss, D_X_loss = cyclegan.get_losses(fakeX, fakeY)
         Gen_opt, D_Y_opt, D_X_opt = cyclegan.get_optimizers(Gen_loss, D_Y_loss, D_X_loss)
 
     # create image pools for holding previously generated images
     fakeX_pool = ImagePool(opt.pool_size)
     fakeY_pool = ImagePool(opt.pool_size)
 
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=2)
 
     with tf.Session() as sess:
         if opt.load_model is not None: # restore graph and variables
@@ -119,16 +123,23 @@ def train():
             start_step = 1
 
         # generate fake images
-        fakeX_imgs, fakeY_imgs = sess.run([fakeX, fakeY])
+        realX, realY = next(dataloader)
+        fakeX_imgs, fakeY_imgs = sess.run([fakeX, fakeY],
+                                          feed_dict={cyclegan.realX: realX,
+                                                     cyclegan.realY: realY})
 
         try:
             for step in range(start_step, opt.niter + opt.niter_decay + 1):
+                realX, realY = next(dataloader) # get next batch of real images
+
                 # calculate losses for the generators and discriminators and minimize them
                 Gen_loss_val, D_Y_loss_val, D_X_loss_val, \
                 fakeX_imgs, fakeY_imgs, _, _, _ = sess.run([Gen_loss, D_Y_loss, D_X_loss, fakeX,
-                                                               fakeY, Gen_opt, D_Y_opt, D_X_opt],
-                                                              feed_dict={cyclegan.poolX: fakeX_pool.query(fakeX_imgs),
-                                                                         cyclegan.poolY: fakeY_pool.query(fakeY_imgs)})
+                                                            fakeY, Gen_opt, D_Y_opt, D_X_opt],
+                                                           feed_dict={cyclegan.realX: realX,
+                                                                      cyclegan.realY: realY,
+                                                                      cyclegan.poolX: fakeX_pool.query(fakeX_imgs),
+                                                                      cyclegan.poolY: fakeY_pool.query(fakeY_imgs)})
 
                 # display the losses of the Generators and Discriminators
                 if step % opt.display_frequency == 0:
