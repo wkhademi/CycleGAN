@@ -1,7 +1,6 @@
 import os
 import sys
 import argparse
-import tensorboard
 import numpy as np
 import tensorflow as tf
 from datetime import datetime
@@ -94,24 +93,28 @@ def train():
     # create an iterator for datasets
     dataloader = iter(DataLoader(opt))
 
-    # build the CycleGAN graph
-    cyclegan = CycleGAN(opt, is_training=True)
-    cyclegan.build_model()
-    fakeA, fakeB = cyclegan.generate()
+    graph = tf.Graph()
+    with graph.as_default():
+        # build the CycleGAN graph
+        cyclegan = CycleGAN(opt, is_training=True)
+        cyclegan.build_model()
+        fakeA, fakeB = cyclegan.generate()
 
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
-    with tf.control_dependencies(update_ops):
-        Gen_loss, D_B_loss, D_A_loss = cyclegan.get_losses(fakeA, fakeB)
-        Gen_opt, D_B_opt, D_A_opt = cyclegan.get_optimizers(Gen_loss, D_B_loss, D_A_loss)
+        with tf.control_dependencies(update_ops):
+            Gen_loss, D_B_loss, D_A_loss = cyclegan.get_losses(fakeA, fakeB)
+            Gen_opt, D_B_opt, D_A_opt = cyclegan.get_optimizers(Gen_loss, D_B_loss, D_A_loss)
+
+        summary_op = tf.summary.merge_all()
+        writer = tf.train.FileWriter(checkpoint, graph)
+        saver = tf.train.Saver(max_to_keep=2)
 
     # create image pools for holding previously generated images
     fakeA_pool = ImagePool(opt.pool_size)
     fakeB_pool = ImagePool(opt.pool_size)
 
-    saver = tf.train.Saver(max_to_keep=2)
-
-    with tf.Session() as sess:
+    with tf.Session(graph=graph) as sess:
         if opt.load_model is not None: # restore graph and variables
             ckpt = tf.train.get_checkpoint_state(checkpoint)
             meta_graph_path = ckpt.model_checkpoint_path + '.meta'
@@ -133,13 +136,17 @@ def train():
                 realA, realB = next(dataloader) # get next batch of real images
 
                 # calculate losses for the generators and discriminators and minimize them
-                Gen_loss_val, D_B_loss_val, D_A_loss_val, \
-                fakeA_imgs, fakeB_imgs, _, _, _ = sess.run([Gen_loss, D_B_loss, D_A_loss, fakeA,
-                                                            fakeB, Gen_opt, D_B_opt, D_A_opt],
+                fakeA_imgs, fakeB_imgs, Gen_loss_val, D_B_loss_val, \
+                D_A_loss_val, summary, _, _, _ = sess.run([fakeA, fakeB, Gen_loss, D_B_loss,
+                                                            D_A_loss, summary_op, Gen_opt, D_B_opt, D_A_opt],
                                                            feed_dict={cyclegan.realA: realA,
                                                                       cyclegan.realB: realB,
                                                                       cyclegan.poolA: fakeA_pool.query(fakeA_imgs),
                                                                       cyclegan.poolB: fakeB_pool.query(fakeB_imgs)})
+
+                # add summary of results at current training step
+                writer.add_summary(summary, step)
+                writer.flush()
 
                 # display the losses of the Generators and Discriminators
                 if step % opt.display_frequency == 0:

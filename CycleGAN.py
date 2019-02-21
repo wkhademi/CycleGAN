@@ -61,6 +61,9 @@ class CycleGAN():
         fakeB = self.G(self.realA)
         fakeA = self.F(self.realB)
 
+        tf.summary.image('generated/A', fakeA)
+        tf.summary.image('generated/B', fakeB)
+
         return fakeA, fakeB
 
     def get_losses(self, fakeA, fakeB):
@@ -85,6 +88,10 @@ class CycleGAN():
         # discriminator losses
         D_A_loss = self.D_loss(self.D_A, self.realA, self.poolA)
         D_B_loss = self.D_loss(self.D_B, self.realB, self.poolB)
+
+        tf.summary.scalar('loss/Gen', Gen_loss)
+        tf.summary.scalar('loss/D_A', D_A_loss)
+        tf.summary.scalar('loss/D_B', D_B_loss)
 
         return Gen_loss, D_B_loss, D_A_loss
 
@@ -194,7 +201,13 @@ class CycleGAN():
             Returns:
                 loss: The cycle consistency loss of our network
         """
-        forward_loss = tf.reduce_mean(tf.abs(F(fakeB) - realA))
-        backward_loss = tf.reduce_mean(tf.abs(G(fakeA) - realB))
+        recA = F(fakeB)
+        recB = G(fakeA)
+
+        tf.summary.image('reconstructed/A', recA)
+        tf.summary.image('reconstructed/B', recB)
+
+        forward_loss = tf.reduce_mean(tf.abs(recA - realA))
+        backward_loss = tf.reduce_mean(tf.abs(recB - realB))
         loss = (self.opt.lambda_A * forward_loss) + (self.opt.lambda_B * backward_loss)
         return loss
