@@ -312,7 +312,7 @@ def bilinear_upsample_filter(ksize,
 
     # apply bilinear filter to proper kernel size
     weights = np.zeros((in_channels, out_channels, ksize, ksize), dtype=np.float32)
-    weights[:, :, : , :] = kernel
+    weights[:, :, :, :] = kernel
     weights = np.transpose(weights, (2, 3, 0, 1))
 
     return weights
