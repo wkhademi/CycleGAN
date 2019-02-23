@@ -2,14 +2,6 @@ import os
 import random
 import numpy as np
 from PIL import Image
-from sklearn.utils import shuffle
-
-
-def shuffle_sets(set_A, set_B):
-    """
-        Shuffle two set in a consistent manner.
-    """
-    return shuffle(set_A, set_B)
 
 
 def sample(sess, g, input):

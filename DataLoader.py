@@ -1,6 +1,7 @@
 import os
 import sys
 import utils
+import random
 import numpy as np
 from PIL import Image
 
@@ -22,12 +23,6 @@ class DataLoader():
         # get the size of the dataset
         self.size_A = len(self.image_paths_A)
         self.size_B = len(self.image_paths_B)
-
-        # trim image sets to be equal length
-        if self.size_A < self.size_B:
-            self.image_paths_B = self.image_paths_B[:self.size_A]
-        elif self.size_B < self.size_A:
-            self.image_paths_A = self.image_paths_A[:self.size_B]
 
         # set input and output channels properly based on direction of mapping
         AtoB = self.opt.direction == 'AtoB'
@@ -92,4 +87,5 @@ class DataLoader():
         """
             Shuffle both sets of images in a consistent manner.
         """
-        self.image_paths_A, self.image_paths_B = utils.shuffle_sets(self.image_paths_A, self.image_paths_B)
+        random.shuffle(self.image_paths_A)
+        random.shuffle(self.image_paths_B)
