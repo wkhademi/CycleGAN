@@ -63,21 +63,21 @@ def test():
     # create an iterator for datasets
     dataloader = iter(DataLoader(opt))
 
-    # build CycleGAN graph
-    cyclegan = CycleGAN(opt, is_training=False)
-    cyclegan.build_model()
+    graph = tf.Graph()
+    with graph.as_default():
+        # build CycleGAN graph
+        cyclegan = CycleGAN(opt, is_training=False)
+        cyclegan.build_model()
 
-    # get real and fake data
-    fakeA, fakeB =  cyclegan.generate()
+        # get real and fake data
+        fakeA, fakeB =  cyclegan.generate()
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+        saver = tf.train.Saver()
 
+    with tf.Session(graph=graph) as sess:
         # get latest checkpoint of loaded model
-        ckpt = tf.train.get_checkpoint_state(checkpoint)
-        meta_graph_path = ckpt.model_checkpoint_path + '.meta'
-        restore = tf.train.import_meta_graph(meta_graph_path)
-        restore.restore(sess, tf.train.latest_checkpoint(checkpoint))
+        ckpt = tf.train.latest_checkpoint(checkpoint)
+        saver.restore(sess, ckpt)
 
         if opt.direction is 'AtoB': # map image from Domain A to Domain B
             samples_dir = os.path.expanduser(os.path.join(opt.sample_directoy, opt.direction))
