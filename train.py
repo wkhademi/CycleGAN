@@ -27,7 +27,7 @@ parser.add_argument('--load_size', type=int, default=286,
                     help='Default size to load in an image.')
 parser.add_argument('--crop_size', type=int, default=256,
                     help='Size to crop an image to.')
-parser.add_argument('--preprocess', type=str, default='resize_and_crop',
+parser.add_argument('--preprocess', type=str, default=None,
                     help='Augmentation to be performed when loading in an image. [resize_and_crop | crop | scale_width | scale_width_and_crop | none]')
 parser.add_argument('--flip', type=bool, default=True,
                     help='Flip images during augmentation.')
@@ -72,7 +72,7 @@ parser.add_argument('--epoch', type=int, default=1,
                     help='Epoch to start training on in case loading model in')
 parser.add_argument('--display_frequency', type=int, default=100,
                     help='The number of steps to train GAN on before printing loss')
-parser.add_argument('--checkpoint_frequency', type=int, default=1000,
+parser.add_argument('--checkpoint_frequency', type=int, default=100,
                     help='The number of steps to train GAN on before saving a checkpoint')
 opt = parser.parse_args()
 
@@ -107,7 +107,7 @@ def train():
             Gen_opt, D_B_opt, D_A_opt = cyclegan.get_optimizers(Gen_loss, D_B_loss, D_A_loss)
 
         summary_op = tf.summary.merge_all()
-        writer = tf.train.FileWriter(checkpoint, graph)
+        writer = tf.summary.FileWriter(checkpoint, graph)
         saver = tf.train.Saver(max_to_keep=2)
 
     # create image pools for holding previously generated images
