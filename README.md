@@ -36,7 +36,8 @@ $ python train.py [arguments (e.g. --data_A=./data/apple2orange/trainA)]
 
 To continue training where you left off, run the command:  
 ```
-$ python train.py --load_model=[checkpoint directory (e.g. 20022019-0801)]
+$ python train.py --load_model=[checkpoint directory (e.g. 20022019-0801)] \
+                  [arguments (e.g. --data_A=./data/apple2orange/trainA)]
 ```
 
 To get the list of arguments, run the command:  
