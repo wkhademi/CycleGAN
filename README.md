@@ -10,7 +10,9 @@ The packages needed to run the CycleGAN model include:
 
 ## Downloading Datasets
 To download a dataset to train/test CycleGAN on, run the following command:  
-`$ bash download_dataset.sh [dataset name]`
+```
+$ bash download_dataset.sh [dataset name]
+```
 
 The list of available datasets for download are:  
 - apple2orange
@@ -28,21 +30,31 @@ The list of available datasets for download are:
 
 ## Training CycleGAN
 To train CycleGAN, run the command:  
-`$ python train.py [arguments (e.g. --data_A=./data/apple2orange/trainA)]`
+```
+$ python train.py [arguments (e.g. --data_A=./data/apple2orange/trainA)]
+```
 
 To continue training where you left off, run the command:  
-`$ python train.py --load_model=[checkpoint directory (e.g. 20022019-0801)]`
+```
+$ python train.py --load_model=[checkpoint directory (e.g. 20022019-0801)]
+```
 
 To get the list of arguments, run the command:  
-`$ python train.py -h`
+```
+$ python train.py -h
+```
 
 ## Testing CycleGAN
 To test a trained CycleGAN model, run the command:  
-`$ python test.py --load_model=[checkpoint directory (e.g. 20022019-0801)] \
-                  [arguments (e.g. --data_A=./data/apple2orange/testA)]`
+```
+$ python test.py --load_model=[checkpoint directory (e.g. 20022019-0801)] \
+                 [arguments (e.g. --data_A=./data/apple2orange/testA)]
+```
 
 To get the list of arguments, run the command:  
-`$ python test.py -h`
+```
+$ python test.py -h
+```
 
 ## Original Paper
 The original CycleGAN paper was written by Jun-Yan Zhu, Taesung Park, Phillip Isola, and Alexei A. Efros.  
