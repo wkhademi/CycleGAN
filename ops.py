@@ -10,9 +10,11 @@ def conv(input,
          out_channels,
          filter_size,
          stride,
+         padding_type='SAME',
          weight_init_type='normal',
          weight_init_gain=1.0,
          bias_const=0.0,
+         use_bias=False,
          norm_type='instance',
          activation_type='ReLU',
          slope=0.2,
@@ -23,14 +25,16 @@ def conv(input,
         Convolution-Normalization-Activation layer.
 
         Args:
-            inputs:
+            input:
             in_channels:
             out_channels:
             filter_size:
             stride:
+            padding_type:
             weight_init_type:
             weight_init_gain:
             bias_const:
+            use_bias:
             norm_type:
             activation_type:
             is_training:
@@ -41,19 +45,22 @@ def conv(input,
             layer:
     """
     with tf.variable_scope(scope, reuse=reuse):
-        # weight and bias initialization
+        # weight initialization
         weights = __weights_init(filter_size, in_channels, out_channels,
                                  init_type=weight_init_type, init_gain=weight_init_gain)
-        biases = __biases_init(out_channels, constant=bias_const)
 
-        # add reflection padding to input
-        padding = __fixed_padding(filter_size)
-        padded_input = tf.pad(input, padding, "REFLECT")
+        if padding_type is 'VALID': # add reflection padding to input
+            padding = __fixed_padding(filter_size)
+            padded_input = tf.pad(input, padding, 'REFLECT')
+        elif padding_type is 'SAME':
+            padded_input = input
 
         layer = tf.nn.conv2d(padded_input, weights, strides=[1, stride, stride, 1],
-                             padding='VALID')
+                             padding=padding_type)
 
-        layer = tf.nn.bias_add(layer, biases)
+        if use_bias:
+            biases = __biases_init(out_channels, constant=bias_const)
+            layer = tf.nn.bias_add(layer, biases)
 
         # instance, batch, or no normalization
         layer = __normalization(layer, is_training, norm_type=norm_type)
@@ -97,15 +104,15 @@ def resnet_block(input,
     """
     with tf.variable_scope(scope, reuse=reuse):
         conv1 = conv(input, in_channels, out_channels, filter_size=filter_size, stride=stride,
-                     norm_type=norm_type, activation_type=activation_type, is_training=is_training,
-                     scope='res_conv1', reuse=reuse)
+                     padding_type='VALID', norm_type=norm_type, activation_type=activation_type,
+                     is_training=is_training, scope='res_conv1', reuse=reuse)
 
         if dropout:
             conv1 = tf.nn.dropout(conv1, keep_prob=0.5)
 
         conv2 = conv(conv1, in_channels, out_channels, filter_size=filter_size, stride=stride,
-                     norm_type=norm_type, activation_type=None, is_training=is_training,
-                     scope='res_conv2', reuse=reuse)
+                     padding_type='VALID', norm_type=norm_type, activation_type=None,
+                     is_training=is_training, scope='res_conv2', reuse=reuse)
 
         layer = input + conv2
 
@@ -239,15 +246,14 @@ def __weights_init(size,
             weights: Weight tensor
     """
     if init_type is 'normal':
-        init = tf.initializers.truncated_normal(stddev=0.02)
+        init = tf.initializers.truncated_normal(stddev=init_gain)
     elif init_type is 'xavier':
-        init = tf.contrib.layers.xavier_initializer()
+        init = tf.initializers.glorot_normal()
     elif init_type is 'orthogonal':
-        init = tf.initializers.orthogonal()
+        init = tf.initializers.orthogonal(gain=init_gain)
 
     weights = tf.get_variable("weights", shape=[size, size, in_channels, out_channels],
                               dtype=tf.float32, initializer=init)
-    weights = init_gain * weights
 
     return weights
 

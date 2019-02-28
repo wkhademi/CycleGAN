@@ -44,7 +44,7 @@ parser.add_argument('--norm_type', type=str, default='instance',
                     help='Type of normalization. [instance | batch]')
 parser.add_argument('--init_type', type=str, default='normal',
                     help='Type of initialization of weights [normal | xavier | orthogonal]')
-parser.add_argument('--init_gain', type=float, default=1,
+parser.add_argument('--init_gain', type=float, default=0.02,
                     help='Scaling factor for normal, xavier, and orthogonal')
 parser.add_argument('--dropout', type=bool, default=False,
                     help='Whether or not to include dropout in generator')

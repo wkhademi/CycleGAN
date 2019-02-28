@@ -91,7 +91,7 @@ class Discriminator():
 
         # produces a single channel prediction map
         layer = ops.conv(layer, in_channels=ndf*nf_mult, out_channels=1, filter_size=4, stride=1,
-                         weight_init_type=init_type, weight_init_gain=init_gain, norm_type=None,
+                         weight_init_type=init_type, weight_init_gain=init_gain, use_bias=True, norm_type=None,
                          activation_type=sigmoid, is_training=is_training, scope='d_out', reuse=self.reuse)
 
         return layer
