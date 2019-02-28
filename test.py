@@ -27,7 +27,7 @@ parser.add_argument('--load_size', type=int, default=286,
                     help='Default size to load in an image.')
 parser.add_argument('--crop_size', type=int, default=256,
                     help='Size to crop an image to.')
-parser.add_argument('--preprocess', type=str, default='resize_and_crop',
+parser.add_argument('--preprocess', type=str, default=None,
                     help='Augmentation to be performed when loading in an image. [resize_and_crop | crop | scale_width | scale_width_and_crop | None]')
 parser.add_argument('--flip', type=bool, default=False,
                     help='Flip images during augmentation.')
@@ -36,7 +36,7 @@ parser.add_argument('--norm_type', type=str, default='instance',
                     help='Type of normalization. [instance | batch]')
 parser.add_argument('--init_type', type=str, default='normal',
                     help='Type of initialization of weights [normal | xavier | orthogonal]')
-parser.add_argument('--init_gain', type=int, default=0.2,
+parser.add_argument('--init_gain', type=int, default=1,
                     help='Scaling factor for normal, xavier, and orthogonal')
 parser.add_argument('--dropout', type=bool, default=False,
                     help='Whether or not to include dropout in generator')

@@ -239,7 +239,7 @@ def __weights_init(size,
             weights: Weight tensor
     """
     if init_type is 'normal':
-        init = tf.initializers.random_normal()
+        init = tf.initializers.truncated_normal(stddev=0.02)
     elif init_type is 'xavier':
         init = tf.contrib.layers.xavier_initializer()
     elif init_type is 'orthogonal':
