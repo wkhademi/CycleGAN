@@ -26,19 +26,19 @@ class Discriminator():
         self.gan_mode = gan_mode
         self.name = name
         self.reuse = False
-        self.sigmoid = 'sigmoid' if gan_mode is not 'lsgan' else None
+        self.sigmoid = 'sigmoid' if gan_mode != 'lsgan' else None
 
     def __call__(self, input):
         with tf.variable_scope(self.name):
-            if self.netD is 'basic': # 70x70 PatchGAN Discriminator
+            if self.netD == 'basic': # 70x70 PatchGAN Discriminator
                 output = self.n_layer_discriminator(input, self.in_channels, self.n_layers, self.ndf,
                                                     self.norm_type, self.init_type, self.init_gain,
                                                     self.is_training, self.sigmoid)
-            elif self.netD is 'n_layers':
+            elif self.netD == 'n_layers':
                 output = self.n_layer_discriminator(input, self.in_channels, self.n_layers, self.ndf,
                                                     self.norm_type, self.init_type, self.init_gain,
                                                     self.is_training, self.sigmoid)
-            elif self.netD is 'pixel': # 1x1 PatchGAN Discriminator
+            elif self.netD == 'pixel': # 1x1 PatchGAN Discriminator
                 output = self.pixel_discriminator(input, self.in_channels, self.ndf, self.norm_type,
                                                   self.init_type, self.init_gain, self.is_training, self.sigmoid)
             else:

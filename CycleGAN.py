@@ -152,9 +152,9 @@ class CycleGAN():
             Returns:
                 generator_loss: The loss of the Generator model
         """
-        if self.opt.gan_mode is 'lsgan': # least squared error
+        if self.opt.gan_mode == 'lsgan': # least squared error
             generator_loss = tf.reduce_mean(tf.squared_difference(D(fake), real_label))
-        elif self.opt.gan_mode is 'vanilla': # negative log likelihood
+        elif self.opt.gan_mode == 'vanilla': # negative log likelihood
             generator_loss = -1 * tf.reduce_mean(tf.log(D(fake) + epsilon))
 
         return generator_loss
@@ -173,10 +173,10 @@ class CycleGAN():
             Returns:
                 discriminator_loss: The loss of the Discriminator model
         """
-        if self.opt.gan_mode is 'lsgan': # least squared error
+        if self.opt.gan_mode == 'lsgan': # least squared error
             discriminator_loss = tf.reduce_mean(tf.squared_difference(D(real), real_label)) + \
                                  tf.reduce_mean(tf.square(D(fake)))
-        elif self.opt.gan_mode is 'vanilla': # negative log likelihood
+        elif self.opt.gan_mode == 'vanilla': # negative log likelihood
             discriminator_loss = -1 * (tf.reduce_mean(tf.log(D(real) + epsilon)) + \
                                        tf.reduce_mean(tf.log((1 - D(fake)) + epsilon)))
 

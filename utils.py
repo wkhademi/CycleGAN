@@ -75,16 +75,16 @@ def augment(opt, image, grayscale=False, normalize=True):
     if grayscale:
         augmented_image.convert('L')
 
-    if opt.preprocess is 'resize':
+    if opt.preprocess == 'resize':
         augmented_image = __resize(augmented_image, opt.load_size)
-    elif opt.preprocess is 'scale_width':
+    elif opt.preprocess == 'scale_width':
         augmented_image = __scale_width(augmented_image, opt.load_size)
-    elif opt.preprocess is 'crop':
+    elif opt.preprocess == 'crop':
         augmented_image = __crop(augmented_image, opt.crop_size)
-    elif opt.preprocess is 'resize_and_crop':
+    elif opt.preprocess == 'resize_and_crop':
         augmented_image = __resize(augmented_image, opt.load_size)
         augmented_image = __crop(augmented_image, opt.crop_size)
-    elif opt.preprocess is 'scale_width_and_crop':
+    elif opt.preprocess == 'scale_width_and_crop':
         augmented_image = __scale_width(augmented_image, opt.load_size)
         augmented_image = __crop(augmented_image, opt.crop_size)
 

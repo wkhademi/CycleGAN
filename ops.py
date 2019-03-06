@@ -49,10 +49,10 @@ def conv(input,
         weights = __weights_init(filter_size, in_channels, out_channels,
                                  init_type=weight_init_type, init_gain=weight_init_gain)
 
-        if padding_type is 'VALID': # add reflection padding to input
+        if padding_type == 'VALID': # add reflection padding to input
             padding = __fixed_padding(filter_size)
             padded_input = tf.pad(input, padding, 'REFLECT')
-        elif padding_type is 'SAME':
+        elif padding_type == 'SAME':
             padded_input = input
 
         layer = tf.nn.conv2d(padded_input, weights, strides=[1, stride, stride, 1],
@@ -189,9 +189,9 @@ def __normalization(inputs,
         Returns:
             norm: Normalized inputs
     """
-    if norm_type is 'batch':
+    if norm_type == 'batch':
         norm = tf.contrib.layers.batch_norm(inputs, is_training=is_training)
-    elif norm_type is 'instance':
+    elif norm_type == 'instance':
         norm = tf.contrib.layers.instance_norm(inputs)
     else:
         norm = inputs
@@ -213,13 +213,13 @@ def __activation_fn(inputs,
         Returns:
             activation: Inputs that have had a non-linear activation applied to them
     """
-    if activation_type is 'ReLU':
+    if activation_type == 'ReLU':
         activation = tf.nn.relu(inputs, name='relu')
-    elif activation_type is 'LeakyReLU':
+    elif activation_type == 'LeakyReLU':
         activation= tf.nn.leaky_relu(inputs, alpha=slope, name='leakyrelu')
-    elif activation_type is 'tanh':
+    elif activation_type == 'tanh':
         activation = tf.nn.tanh(inputs, name='tanh')
-    elif activation_type is 'sigmoid':
+    elif activation_type == 'sigmoid':
         activation = tf.nn.sigmoid(inputs, name='sigmoid')
     else:
         activation = inputs
@@ -245,11 +245,11 @@ def __weights_init(size,
         Returns:
             weights: Weight tensor
     """
-    if init_type is 'normal':
+    if init_type == 'normal':
         init = tf.initializers.truncated_normal(stddev=init_gain)
-    elif init_type is 'xavier':
+    elif init_type == 'xavier':
         init = tf.initializers.glorot_normal()
-    elif init_type is 'orthogonal':
+    elif init_type == 'orthogonal':
         init = tf.initializers.orthogonal(gain=init_gain)
 
     weights = tf.get_variable("weights", shape=[size, size, in_channels, out_channels],

@@ -79,10 +79,10 @@ def test():
         ckpt = tf.train.latest_checkpoint(checkpoint)
         saver.restore(sess, ckpt)
 
-        if opt.direction is 'AtoB': # map image from Domain A to Domain B
+        if opt.direction == 'AtoB': # map image from Domain A to Domain B
             samples_dir = os.path.expanduser(os.path.join(opt.sample_directoy, opt.direction))
             fakeImg = fakeB
-        elif opt.direction is 'BtoA': # map image from Domain B to Domain A
+        elif opt.direction == 'BtoA': # map image from Domain B to Domain A
             samples_dir = os.path.expanduser(os.path.join(opt.sample_directoy, opt.direction))
             fakeImg = fakeA
         else:

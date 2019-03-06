@@ -29,18 +29,18 @@ class Generator():
 
     def __call__(self, input):
         with tf.variable_scope(self.name):
-            if self.netG is 'resnet_9blocks':
+            if self.netG == 'resnet_9blocks':
                 output = self.resnet_generator(input, self.in_channels, self.out_channels, self.ngf,
                                                self.norm_type, self.init_type, self.init_gain, self.dropout,
                                                self.is_training, n_blocks=9)
-            elif self.netG is 'resnet_6blocks':
+            elif self.netG == 'resnet_6blocks':
                 output = self.resnet_generator(input, self.in_channels, self.out_channels, self.ngf,
                                                self.norm_type, self.init_type, self.init_gain, self.dropout,
                                                self.is_training, n_blocks=6)
-            elif self.netG is 'unet_256':
+            elif self.netG == 'unet_256':
                 print("Haven't implemented yet...")
                 sys.exit(1)
-            elif self.netG is 'unet_128':
+            elif self.netG == 'unet_128':
                 print("Haven't implemented yet...")
                 sys.exit(1)
             else:
