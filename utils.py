@@ -105,7 +105,7 @@ def __resize(image, new_size):
         Resize an image to a specific height and width.
     """
     size = [new_size, new_size]
-    image.resize(size, Image.BICUBIC)
+    image = image.resize(size, Image.BICUBIC)
 
     return image
 
@@ -118,7 +118,7 @@ def __scale_width(image, new_width):
 
     if old_width != new_width:
         new_height = int(new_width * (old_height / old_width))
-        image.resize([new_width, new_height], Image.BICUBIC)
+        image = image.resize([new_width, new_height], Image.BICUBIC)
 
     return image
 
@@ -132,8 +132,8 @@ def __crop(image, new_size):
     start_width = random.randint(0, old_width - new_size)
 
     # randomly crop an image
-    image.crop((start_width, start_height,
-                new_size + (start_width - 1), new_size + (start_height - 1)))
+    image = image.crop((start_width, start_height,
+                        new_size + (start_width - 1), new_size + (start_height - 1)))
 
     return image
 
@@ -150,7 +150,7 @@ def __make_power_2(image, base):
     if (new_width == old_width) and (new_height == old_height):
         return image
 
-    image.resize([new_width, new_height], Image.BICUBIC)
+    image = image.resize([new_width, new_height], Image.BICUBIC)
 
     return image
 
@@ -162,7 +162,7 @@ def __flip(image):
     flip = random.random() > 0.5
 
     if flip:
-        image.transpose(Image.FLIP_LEFT_RIGHT)
+        image = image.transpose(Image.FLIP_LEFT_RIGHT)
 
     return image
 
