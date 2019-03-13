@@ -321,7 +321,7 @@ def bilinear_upsample_filter(ksize,
     weights[:, :, :, :] = kernel
     weights = np.transpose(weights, (2, 3, 1, 0))
 
-    init = tf.constant_initializer(values=weights, dtype=tf.float32)
+    init = tf.constant_initializer(value=weights, dtype=tf.float32)
     w = tf.get_variable(name='weights', initializer=init, shape=weights.shape)
 
     return w
