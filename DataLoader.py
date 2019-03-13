@@ -9,8 +9,9 @@ class DataLoader():
     """
         Load image paths and the actual images for two datasets.
     """
-    def __init__(self, opt):
+    def __init__(self, opt, is_training):
         self.opt = opt
+        self.is_training = is_training
 
         # path to data
         self.path_A = os.path.expanduser(self.opt.data_A)
@@ -47,8 +48,8 @@ class DataLoader():
         image_B = Image.open(image_path_B).convert('RGB')
 
         # perform data augmentation on images
-        A = utils.augment(self.opt, image_A, grayscale=(self.in_channels == 1))
-        B = utils.augment(self.opt, image_B, grayscale=(self.out_channels == 1))
+        A = utils.augment(self.opt, image_A, grayscale=(self.in_channels == 1), normalize=self.is_training)
+        B = utils.augment(self.opt, image_B, grayscale=(self.out_channels == 1), normalize=self.is_training)
 
         return {'A': A, 'A_path': image_path_A, 'B': B, 'B_path': image_path_B}
 

@@ -1,6 +1,7 @@
 import os
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -39,6 +40,34 @@ def save_image(image, image_path):
     image = ((image[0] + 1) * 127.5).astype(np.uint8) # convert from [-1, 1] to [0, 255]
     img = Image.fromarray(image)
     img.save(os.path.expanduser(image_path))
+
+
+def save_images(real_images, generated_images, path):
+    fig=plt.figure(figsize=(15, 8))
+    columns = 8
+    rows = 4
+    end = int((columns*rows) / 2 + 1)
+
+    for i in range(1, end):
+        real_img = real_images[i-1]
+        gen_img = ((generated_images[i-1] + 1) * 127.5).astype(np.uint8)
+        fig.add_subplot(rows, columns, i)
+        plt.axis('off')
+
+        if real_img.shape[2] == 1:
+            plt.imshow(real_img, cmap='gray')
+        else:
+            plt.imshow(real_img)
+
+        fig.add_subplot(rows, columns, i+16)
+        plt.axis('off')
+
+        if gen_img.shape[2] == 1:
+            plt.imshow(gen_img, cmap='gray')
+        else:
+            plt.imshow(gen_img)
+
+    plt.savefig(path)
 
 
 def get_image_paths(dir):

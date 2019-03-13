@@ -91,7 +91,7 @@ def train():
             sys.exit(1)
 
     # create an iterator for datasets
-    dataloader = iter(DataLoader(opt))
+    dataloader = iter(DataLoader(opt, is_training=True))
 
     graph = tf.Graph()
     with graph.as_default():
