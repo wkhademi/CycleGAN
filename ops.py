@@ -305,7 +305,7 @@ def bilinear_upsample_filter(ksize,
             in_channels: The number of input channels
             out_channels: The desired number of output channels
         Returns:
-            weights: A Numpy array containing the set of filters used during upsampling
+            w: A tensor containing the set of filters used during upsampling
     """
     if (ksize % 2 == 1):
         center = factor - 1
@@ -319,6 +319,9 @@ def bilinear_upsample_filter(ksize,
     # apply bilinear filter to proper kernel size
     weights = np.zeros((in_channels, out_channels, ksize, ksize), dtype=np.float32)
     weights[:, :, :, :] = kernel
-    weights = np.transpose(weights, (2, 3, 0, 1))
+    weights = np.transpose(weights, (2, 3, 1, 0))
 
-    return weights
+    init = tf.constant_initializer(values=weights, dtype=tf.float32)
+    w = tf.get_variable(name='weights', initializer=init, shape=weights.shape)
+
+    return w
